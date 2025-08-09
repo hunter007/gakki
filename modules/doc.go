@@ -27,8 +27,13 @@ func init() {
 
 	setupPcre2()
 	setupZlib()
-	setupApisixNginxModule()
+	setupLuaRestyEvents()
+	setupNgxMultiUpstreamModule()
+	setupLuaVarNginxModule()
+	setupModDubbo()
 	setupOpenssl()
+	setupWasmNginxModule()
+	setupApisixNginxModule()
 	setDeps()
 }
 
