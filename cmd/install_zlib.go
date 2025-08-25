@@ -39,20 +39,21 @@ var zlibCmd = &cobra.Command{
 			os.Exit(-1)
 		}
 
-		// if err := module.Download(); err != nil {
-		// 	slog.Error(fmt.Sprintf("download zlib error: %s", err))
-		// 	os.Exit(-1)
-		// }
+		if err := module.Download(); err != nil {
+			slog.Error(fmt.Sprintf("download zlib error: %s", err))
+			os.Exit(-1)
+		}
 
-		// if err := module.Untar(); err != nil {
-		// 	slog.Error(fmt.Sprintf("untar zlib error: %s", err))
-		// 	os.Exit(-1)
-		// }
+		if err := module.Untar(); err != nil {
+			slog.Error(fmt.Sprintf("untar zlib error: %s", err))
+			os.Exit(-1)
+		}
 
 		if err := module.Install(module); err != nil {
 			slog.Error(fmt.Sprintf("install zlib error: %s", err))
 			os.Exit(-1)
 		}
+		slog.Info("Install pcre2 successfully")
 	},
 }
 

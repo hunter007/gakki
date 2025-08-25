@@ -47,6 +47,11 @@ var pcre2Cmd = &cobra.Command{
 			slog.Error(fmt.Sprintf("untar pcre2 error: %s", err))
 			os.Exit(-1)
 		}
+		if err := module.Install(module); err != nil {
+			slog.Error(fmt.Sprintf("install pcre2 error: %s", err))
+			os.Exit(-1)
+		}
+		slog.Info("Install pcre2 successfully")
 	},
 }
 
