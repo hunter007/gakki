@@ -23,13 +23,13 @@ func init() {
 
 func Uname() OS {
 	cmd := exec.Command("uname")
-	if err := cmd.Run(); err != nil {
-		slog.Error(fmt.Sprintf("cannot get os: %s", err))
-		os.Exit(-1)
-	}
+	// if err := cmd.Run(); err != nil {
+	// 	slog.Error(fmt.Sprintf("cannot get os: %s", err))
+	// 	os.Exit(-1)
+	// }
 	out, err := cmd.Output()
 	if err != nil {
-		slog.Error(fmt.Sprintf("cannot get os: %s", err))
+		slog.Error(fmt.Sprintf("cannot get os: %s, output: %s", err, string(out)))
 		os.Exit(-1)
 	}
 

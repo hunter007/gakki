@@ -13,6 +13,7 @@ func setupNgxMultiUpstreamModule() {
 			"1.0.0",
 		},
 		downloadTemplate: "https://github.com/api7/ngx_multi_upstream_module/archive/refs/tags/%s.tar.gz",
+		hasPatches:       true,
 	}
 
 	all[module.name] = module

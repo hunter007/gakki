@@ -19,45 +19,9 @@
 
 set -ex
 
-function detect_aur_helper() {
-    if [[ $(command -v yay) ]]; then
-        AUR_HELPER=yay
-    elif [[ $(command -v pacaur) ]]; then
-        AUR_HELPER=pacaur
-    else
-        echo No available AUR helpers found. Please specify your AUR helper by AUR_HELPER.
-        exit 255
-    fi
-}
 
-function install_dependencies_with_aur() {
-    detect_aur_helper
-    $AUR_HELPER -S openresty --noconfirm
-    sudo pacman -S openssl --noconfirm
 
-    export OPENRESTY_PREFIX=/opt/openresty
 
-    sudo mkdir $OPENRESTY_PREFIX/openssl
-    sudo ln -s /usr/include $OPENRESTY_PREFIX/openssl/include
-    sudo ln -s /usr/lib $OPENRESTY_PREFIX/openssl/lib
-}
-
-# Install dependencies on centos and fedora
-function install_dependencies_with_yum() {
-    sudo yum install -y yum-utils
-    sudo yum-config-manager --add-repo "https://openresty.org/package/${1}/openresty.repo"
-    if [[ "${1}" == "centos" ]]; then
-        sudo yum -y install centos-release-scl
-        sudo yum -y install devtoolset-9 patch wget
-        set +eu
-        source scl_source enable devtoolset-9
-        set -eu
-    fi
-    sudo yum install -y  \
-        gcc gcc-c++ curl wget unzip xz gnupg perl-ExtUtils-Embed cpanminus patch libyaml-devel \
-        perl perl-devel pcre pcre-devel openldap-devel \
-        openresty-zlib-devel openresty-pcre-devel
-}
 
 # Install dependencies on ubuntu and debian
 function install_dependencies_with_apt() {
@@ -81,43 +45,8 @@ function install_dependencies_with_apt() {
     sudo apt-get install -y curl make gcc g++ cpanminus libpcre3 libpcre3-dev libyaml-dev unzip openresty-zlib-dev openresty-pcre-dev
 }
 
-# Identify the different distributions and call the corresponding function
-function multi_distro_installation() {
-    if grep -Eqi "CentOS" /etc/issue || grep -Eq "CentOS" /etc/*-release; then
-        install_dependencies_with_yum "centos"
-    elif grep -Eqi -e "Red Hat" -e "rhel" /etc/*-release; then
-        install_dependencies_with_yum "rhel"
-    elif grep -Eqi "Fedora" /etc/issue || grep -Eq "Fedora" /etc/*-release; then
-        install_dependencies_with_yum "fedora"
-    elif grep -Eqi "Debian" /etc/issue || grep -Eq "Debian" /etc/*-release; then
-        install_dependencies_with_apt "debian"
-    elif grep -Eqi "Ubuntu" /etc/issue || grep -Eq "Ubuntu" /etc/*-release; then
-        install_dependencies_with_apt "ubuntu"
-    elif grep -Eqi "Arch" /etc/issue || grep -Eqi "EndeavourOS" /etc/issue || grep -Eq "Arch" /etc/*-release; then
-        install_dependencies_with_aur
-    else
-        echo "Non-supported distribution, APISIX is only supported on Linux-based systems"
-        exit 1
-    fi
-    install_apisix_runtime
-}
 
-function multi_distro_uninstallation() {
-    if grep -Eqi "CentOS" /etc/issue || grep -Eq "CentOS" /etc/*-release; then
-        sudo yum autoremove -y openresty-zlib-devel openresty-pcre-devel
-    elif grep -Eqi -e "Red Hat" -e "rhel" /etc/*-release; then
-        sudo yum autoremove -y openresty-zlib-devel openresty-pcre-devel
-    elif grep -Eqi "Fedora" /etc/issue || grep -Eq "Fedora" /etc/*-release; then
-        sudo yum autoremove -y openresty-zlib-devel openresty-pcre-devel
-    elif grep -Eqi "Debian" /etc/issue || grep -Eq "Debian" /etc/*-release; then
-        sudo apt-get autoremove -y openresty-zlib-dev openresty-pcre-dev
-    elif grep -Eqi "Ubuntu" /etc/issue || grep -Eq "Ubuntu" /etc/*-release; then
-        sudo apt-get autoremove -y openresty-zlib-dev openresty-pcre-dev
-    else
-        echo "Non-supported distribution, APISIX is only supported on Linux-based systems"
-        exit 1
-    fi
-}
+
 
 function install_apisix_runtime() {
     export runtime_version=${APISIX_RUNTIME:?}

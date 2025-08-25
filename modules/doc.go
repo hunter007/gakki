@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 )
 
 // dependentDir all modules will be downloaded to this directory
 var (
 	dependentDir string
-	all          map[string]*Module
 )
+
+var all = map[string]*Module{}
 
 func init() {
 	home, err := os.UserHomeDir()
@@ -20,9 +22,17 @@ func init() {
 	}
 
 	dependentDir = fmt.Sprintf("%s%c%s", home, os.PathSeparator, ".deps")
-	if err := os.Mkdir(dependentDir, 0o644); err != nil {
-		slog.Error(fmt.Sprintf("未知错误: %s, report it", err))
-		os.Exit(-1)
+	_, err = os.Stat(dependentDir)
+	if err != nil {
+		if strings.Contains(err.Error(), "no such file or directory") {
+			if err := os.Mkdir(dependentDir, 0o755); err != nil {
+				slog.Error(fmt.Sprintf("make dependent directory error: %s", err))
+				os.Exit(-1)
+			}
+		} else {
+			slog.Error(fmt.Sprintf("未知错误: %v, report it", err))
+			os.Exit(-1)
+		}
 	}
 
 	setupPcre2()
