@@ -45,6 +45,7 @@ func init() {
 	setupWasmNginxModule()
 	setupApisixNginxModule()
 	setDeps()
+	setupOpenresty()
 }
 
 func setDeps() {

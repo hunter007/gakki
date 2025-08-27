@@ -6,20 +6,37 @@ import (
 	"os"
 	"os/exec"
 	"strconv"
+	"strings"
 
 	"github.com/hunter007/gakki/goutils"
 )
 
 func configOpenssl(m *Module) error {
 	zlibModule := m.GetDependence("zlib")
-	configArgsTemplate := `./config enable-fips shared zlib enable-camellia enable-seed enable-rfc3779 enable-cms enable-md2 enable-rc5 enable-weak-ssl-ciphers --prefix=%s --libdir=lib --with-zlib-lib=%s/lib --with-zlib-include=%s/include`
+	// enable-camellia  enable-fips enable-weak-ssl-ciphers
+	configArgsTemplate := `--prefix=%s zlib`
 	configArgs := fmt.Sprintf(configArgsTemplate, m.Prefix(), zlibModule.Prefix(), zlibModule.Prefix())
 
-	cmd := exec.Command("./config", configArgs)
-	cmd.Dir = m.Dir(m.Version())
-	cmd.Env = append(cmd.Environ(), fmt.Sprintf("LDFLAGS=-Wl,-rpath,%s/lib:%s/lib", zlibModule.Prefix(), m.Prefix()))
+	f, err := os.Stat(m.Prefix())
+	if err != nil {
+		if strings.Contains(err.Error(), "no such file or directory") {
+			if err = os.Mkdir(m.Prefix(), 0o755); err != nil {
+				return err
+			}
+		}
+		return err
+	}
+	if !f.IsDir() {
+		return fmt.Errorf("%s is not directory", m.Prefix())
+	}
 
-	out, err := cmd.Output()
+	cmd := exec.Command("./Configure", configArgs)
+	cmd.Dir = m.Dir(m.Version())
+	LDFLAGS := fmt.Sprintf(`LDFLAGS=-Wl,-rpath,%s/lib:%s/lib`, zlibModule.Prefix(), m.Prefix())
+	cmd.Env = append(cmd.Environ(), LDFLAGS)
+	cmd.Env = append(cmd.Env, `CC="gcc"`)
+	out, err := cmd.CombinedOutput()
+
 	slog.Info(string(out))
 	return err
 }
@@ -27,11 +44,13 @@ func configOpenssl(m *Module) error {
 func makeOpenssl(m *Module) error {
 	zlibModule := m.GetDependence("zlib")
 
-	cmd := exec.Command("make", "-j", strconv.Itoa(int(goutils.Nproc())), `LD_LIBRARY_PATH= CC="gcc"`)
+	// cmd := exec.Command("make", "-j", strconv.Itoa(int(goutils.Nproc())), `LD_LIBRARY_PATH= CC="gcc"`)
+	cmd := exec.Command("make", "-j", strconv.Itoa(int(goutils.Nproc())))
 	cmd.Dir = m.Dir(m.Version())
-	cmd.Env = append(cmd.Environ(), fmt.Sprintf("LDFLAGS=-Wl,-rpath,%s/lib:%s/lib", zlibModule.Prefix(), m.Prefix()))
+	LDFLAGS := fmt.Sprintf(`LDFLAGS=-Wl,-rpath,%s/lib:%s/lib`, zlibModule.Prefix(), m.Prefix())
+	cmd.Env = append(cmd.Environ(), LDFLAGS)
 
-	out, err := cmd.Output()
+	out, err := cmd.CombinedOutput()
 	slog.Info(string(out))
 	return err
 }
@@ -79,14 +98,17 @@ func modifyOpensslConf(m *Module) error {
 
 func installOpenssl(m *Module) error {
 	if err := configOpenssl(m); err != nil {
+		slog.Error(fmt.Sprintf("config openssl error: %s", err))
 		return err
 	}
 
 	if err := makeOpenssl(m); err != nil {
+		slog.Error(fmt.Sprintf("make openssl error: %s", err))
 		return err
 	}
 
 	if err := makeInstallOpenssl(m); err != nil {
+		slog.Error(fmt.Sprintf("make install openssl error: %s", err))
 		return err
 	}
 	// TODO:

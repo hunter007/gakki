@@ -27,7 +27,7 @@ import (
 var (
 	opensslVersion    string
 	opensslEnableFIPS bool   = true
-	opensslPrefix     string = ""
+	opensslPrefix     string = "/usr/local/openssl"
 )
 
 // opensslCmd represents the openssl sub command
@@ -39,6 +39,8 @@ var opensslCmd = &cobra.Command{
 		module := modules.GetModule("openssl")
 		module.SetPrefix(opensslPrefix)
 		if err := module.SetVersion(opensslVersion); err != nil {
+			slog.Warn(fmt.Sprintf("unkown openssl version: %s", opensslVersion))
+			module.PrintValidVersions()
 			os.Exit(-1)
 		}
 
@@ -52,12 +54,11 @@ var opensslCmd = &cobra.Command{
 			os.Exit(-1)
 		}
 
-		if module.Install != nil {
-			if err := module.Install(module); err != nil {
-				slog.Error(fmt.Sprintf("untar openssl error: %s", err))
-				os.Exit(-1)
-			}
+		if err := module.Install(module); err != nil {
+			slog.Error(fmt.Sprintf("install openssl error: %s", err))
+			os.Exit(-1)
 		}
+		slog.Info("Install openssl successfully")
 	},
 }
 

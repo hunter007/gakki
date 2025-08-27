@@ -65,6 +65,7 @@ func (m *Module) Untar() error {
 	if err := cmd.Run(); err != nil {
 		return err
 	}
+	slog.Info(fmt.Sprintf("Untar to %s successfully", m.Dir(m.version)))
 
 	if m.hasPatches {
 		return m.scanPatches()
@@ -116,6 +117,10 @@ func (m *Module) SetVersion(version string) error {
 		return nil
 	}
 	return fmt.Errorf("invalid version: %s", version)
+}
+
+func (m *Module) PrintValidVersions() {
+	slog.Info("Valid version:\n" + strings.Join(m.ListVersions(), "\n"))
 }
 
 func (m *Module) AddDependence(dep *Module) {

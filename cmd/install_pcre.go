@@ -35,6 +35,7 @@ var pcre2Cmd = &cobra.Command{
 		module := modules.GetModule("pcre2")
 		if err := module.SetVersion(pcre2Version); err != nil {
 			slog.Error(fmt.Sprintf("unkown pcre2 version: %s", pcre2Version))
+			module.PrintValidVersions()
 			os.Exit(-1)
 		}
 

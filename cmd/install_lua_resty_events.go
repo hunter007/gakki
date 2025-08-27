@@ -5,33 +5,47 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
+	"os"
 
+	"github.com/hunter007/gakki/modules"
 	"github.com/spf13/cobra"
 )
 
+var luaRestyEventsVersion string
+
 // luaRestyEventsCmd represents the lua_resty_events sub command
 var luaRestyEventsCmd = &cobra.Command{
-	Use:   "llua-resty-events",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-https://github.com/Kong/lua-resty-events.git`,
+	Use:   "lua-resty-events",
+	Short: "",
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("install called")
+		module := modules.GetModule("lua-resty-events")
+
+		if err := module.SetVersion(luaRestyEventsVersion); err != nil {
+			slog.Warn(fmt.Sprintf("unkown lua-resty-events version: %s", luaRestyEventsVersion))
+			os.Exit(-1)
+		}
+
+		if err := module.Download(); err != nil {
+			slog.Error(fmt.Sprintf("download lua-resty-events error: %s", err))
+			os.Exit(-1)
+		}
+
+		if err := module.Untar(); err != nil {
+			slog.Error(fmt.Sprintf("untar lua-resty-events error: %s", err))
+			os.Exit(-1)
+		}
+
+		// if err := module.Install(module); err != nil {
+		// 	slog.Error(fmt.Sprintf("install lua-resty-events error: %s", err))
+		// 	os.Exit(-1)
+		// }
+		slog.Info("Install lua-resty-events successfully")
 	},
 }
 
 func init() {
 	installCmd.AddCommand(luaRestyEventsCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// installCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// installCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	luaRestyEventsCmd.PersistentFlags().StringVarP(&luaRestyEventsVersion, "version", "v", "", "lua-resty-events's version")
 }

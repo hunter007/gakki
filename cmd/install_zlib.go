@@ -36,6 +36,7 @@ var zlibCmd = &cobra.Command{
 
 		if err := module.SetVersion(zlibVersion); err != nil {
 			slog.Warn(fmt.Sprintf("unkown zlib version: %s", zlibVersion))
+			module.PrintValidVersions()
 			os.Exit(-1)
 		}
 

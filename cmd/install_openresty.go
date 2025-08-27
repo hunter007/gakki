@@ -20,24 +20,11 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/hunter007/gakki/modules"
 	"github.com/spf13/cobra"
 )
 
-var validVersions = map[string]struct{}{
-	"1.27.1.2": {},
-	"1.25.3.2": {},
-	"1.25.3.1": {},
-	"1.21.4.4": {},
-	"1.21.4.3": {},
-	"1.21.4.2": {},
-	"1.21.4.1": {},
-	"1.19.9.2": {},
-	"1.19.9.1": {},
-	"1.19.3.2": {},
-	"1.19.3.1": {},
-}
-
-var version string
+var openrestyVersion string
 
 // openrestyCmd represents the openresty sub command
 var openrestyCmd = &cobra.Command{
@@ -46,26 +33,33 @@ var openrestyCmd = &cobra.Command{
 	Long:  ``,
 
 	Run: func(cmd *cobra.Command, args []string) {
-		// TODO: check args
-		dep := Dependent{
-			Url:      fmt.Sprintf("https://openresty.org/download/openresty-%s.tar.gz", version),
-			FileName: fmt.Sprintf("openresty-%s.tar.gz", version),
-		}
-		if err := download(dep); err != nil {
-			slog.Error(fmt.Sprintf("download error: %s", err))
+		module := modules.GetModule("openresty")
+		if err := module.SetVersion(openrestyVersion); err != nil {
+			slog.Warn(fmt.Sprintf("unkown openresty version: %s", openrestyVersion))
+			module.PrintValidVersions()
 			os.Exit(-1)
 		}
 
-		if err := Untar(dep.String()); err != nil {
-			slog.Error(fmt.Sprintf("untar %s error: %s", dep, err))
+		if err := module.Download(); err != nil {
+			slog.Error(fmt.Sprintf("download openresty error: %s", err))
 			os.Exit(-1)
 		}
+
+		if err := module.Untar(); err != nil {
+			slog.Error(fmt.Sprintf("untar openresty error: %s", err))
+			os.Exit(-1)
+		}
+		// if err := module.Install(module); err != nil {
+		// 	slog.Error(fmt.Sprintf("install openresty error: %s", err))
+		// 	os.Exit(-1)
+		// }
+		// slog.Info("Install openresty successfully")
 	},
 }
 
 func init() {
 	installCmd.AddCommand(openrestyCmd)
-	openrestyCmd.PersistentFlags().StringVarP(&version, "version", "v", "", "openresty's version")
+	openrestyCmd.PersistentFlags().StringVarP(&openrestyVersion, "version", "v", "", "openresty's version")
 }
 
 type dir struct {
