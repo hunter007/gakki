@@ -2,7 +2,7 @@ package modules
 
 func setupLuaVarNginxModule() {
 	module := &Module{
-		name: "lua-var-nginx-module",
+		name: "lua_var_nginx_module",
 		validVersions: []string{
 			"0.5.3",
 			"0.5.2",

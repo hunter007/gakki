@@ -2,7 +2,7 @@ package modules
 
 func setupNgxMultiUpstreamModule() {
 	module := &Module{
-		name: "ngx-multi-upstream-module",
+		name: "ngx_multi_upstream_module",
 		validVersions: []string{
 			"1.3.2",
 			"1.3.1",

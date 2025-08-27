@@ -54,7 +54,7 @@ var zlibCmd = &cobra.Command{
 			slog.Error(fmt.Sprintf("install zlib error: %s", err))
 			os.Exit(-1)
 		}
-		slog.Info("Install pcre2 successfully")
+		slog.Info("Install zlib successfully")
 	},
 }
 

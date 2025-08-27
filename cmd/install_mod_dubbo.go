@@ -5,9 +5,14 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
+	"os"
 
+	"github.com/hunter007/gakki/modules"
 	"github.com/spf13/cobra"
 )
+
+var modDubboVersion string
 
 // modDubboCmd represents the mod_dubbo sub command
 var modDubboCmd = &cobra.Command{
@@ -18,20 +23,29 @@ and usage of using your command. For example:
 
 https://github.com/api7/mod_dubbo.git`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("install called")
+		module := modules.GetModule("mod_dubbo")
+
+		if err := module.SetVersion(modDubboVersion); err != nil {
+			slog.Warn(fmt.Sprintf("unkown mod_dubbo version: %s", modDubboVersion))
+			module.PrintValidVersions()
+			os.Exit(-1)
+		}
+
+		if err := module.Download(); err != nil {
+			slog.Error(fmt.Sprintf("download mod_dubbo error: %s", err))
+			os.Exit(-1)
+		}
+
+		if err := module.Untar(); err != nil {
+			slog.Error(fmt.Sprintf("untar mod_dubbo error: %s", err))
+			os.Exit(-1)
+		}
+
+		slog.Info("Install mod_dubbo successfully")
 	},
 }
 
 func init() {
 	installCmd.AddCommand(modDubboCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// installCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// installCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	modDubboCmd.PersistentFlags().StringVarP(&modDubboVersion, "version", "v", "", "mod_dubbo's version")
 }

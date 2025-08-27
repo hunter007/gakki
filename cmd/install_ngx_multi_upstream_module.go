@@ -5,36 +5,49 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
+	"os"
 
+	"github.com/hunter007/gakki/modules"
 	"github.com/spf13/cobra"
 )
+
+var multiUpstreamVersion string
 
 // ngxMultiUpstreamModuleCmd represents the ngx_multi_upstream_module sub command
 var ngxMultiUpstreamModuleCmd = &cobra.Command{
 	Use:   "ngx_multi_upstream_module",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-git clone git@github.com:api7/ngx_multi_upstream_module.git`,
+	Short: "",
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("install called")
+		module := modules.GetModule("ngx_multi_upstream_module")
+
+		if err := module.SetVersion(multiUpstreamVersion); err != nil {
+			slog.Warn(fmt.Sprintf("unkown ngx_multi_upstream_module version: %s", multiUpstreamVersion))
+			module.PrintValidVersions()
+			os.Exit(-1)
+		}
+
+		if err := module.Download(); err != nil {
+			slog.Error(fmt.Sprintf("download ngx_multi_upstream_module error: %s", err))
+			os.Exit(-1)
+		}
+
+		if err := module.Untar(); err != nil {
+			slog.Error(fmt.Sprintf("untar ngx_multi_upstream_module error: %s", err))
+			os.Exit(-1)
+		}
+
+		if err := module.PatchForOpenresty(); err != nil {
+			slog.Error(err.Error())
+			os.Exit(-1)
+		}
+
+		slog.Info("Install ngx_multi_upstream_module successfully")
 	},
 }
 
 func init() {
-	installCmd.AddCommand(zlibCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// installCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// installCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-}
-
-func patch() {
+	installCmd.AddCommand(ngxMultiUpstreamModuleCmd)
+	ngxMultiUpstreamModuleCmd.PersistentFlags().StringVarP(&multiUpstreamVersion, "version", "v", "", "ngx_multi_upstream_module's version")
 }

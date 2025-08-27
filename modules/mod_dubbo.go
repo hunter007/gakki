@@ -2,7 +2,7 @@ package modules
 
 func setupModDubbo() {
 	module := &Module{
-		name: "mod-dubbo",
+		name: "mod_dubbo",
 		validVersions: []string{
 			"1.0.2",
 			"1.0.1",

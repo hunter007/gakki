@@ -5,22 +5,26 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"slices"
 	"strings"
 )
 
 type (
 	InstallModuleFunc = func(*Module) error
+	PatchFunc         = func(*Module) error
 	Module            struct {
 		name             string
 		prefix           string
 		version          string
 		validVersions    []string
 		downloadTemplate string
+		tarFilename      string
 		dependences      []*Module
 		hasPatches       bool
 		patches          []string
 		Install          InstallModuleFunc
+		Patch            PatchFunc
 	}
 )
 
@@ -88,11 +92,19 @@ func (m *Module) scanPatches() error {
 }
 
 func (m *Module) Filename(version string) string {
-	return fmt.Sprintf("%s-%s.tar.gz", m.name, version)
+	filename := m.name
+	if m.tarFilename != "" {
+		filename = m.tarFilename
+	}
+	return fmt.Sprintf("%s-%s.tar.gz", filename, version)
 }
 
 func (m *Module) Dir(version string) string {
-	return fmt.Sprintf("%s%c%s-%s", dependentDir, os.PathSeparator, m.name, version)
+	filename := m.name
+	if m.tarFilename != "" {
+		filename = m.tarFilename
+	}
+	return fmt.Sprintf("%s%c%s-%s", dependentDir, os.PathSeparator, filename, version)
 }
 
 func (m *Module) VersionValid(version string) bool {
@@ -138,4 +150,33 @@ func (m *Module) GetDependence(depName string) *Module {
 
 func (m *Module) GetPatchFiles() []string {
 	return slices.Clone(m.patches)
+}
+
+func (m *Module) PatchForOpenresty() error {
+	cwd := m.Dir(m.version)
+	openrestyDir := ""
+
+	dirs, _ := os.ReadDir(filepath.Dir(cwd))
+	for _, d := range dirs {
+		if strings.Index(d.Name(), "openresty-") == 0 {
+			openrestyDir = d.Name()
+			break
+		}
+	}
+
+	if openrestyDir == "" {
+		err := fmt.Errorf("patch not found in %s", m.name)
+		slog.Error(err.Error())
+		return err
+	}
+
+	cmd := exec.Command("./patch.sh", "../"+openrestyDir)
+	cmd.Dir = m.Dir(m.version)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		slog.Info("patch error: " + string(output))
+		return err
+	}
+	slog.Info("patch ok")
+	return nil
 }
