@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+
+	"github.com/hunter007/gakki/goutils"
 )
 
 type (
@@ -37,6 +39,9 @@ func (m *Module) ListVersions() []string {
 }
 
 func (m *Module) Url() string {
+	if m.name == "etcd" {
+		return fmt.Sprintf(m.downloadTemplate, m.version, m.version, goutils.Uname().String(), goutils.Arch())
+	}
 	if strings.Count(m.downloadTemplate, "%s") == 1 {
 		return fmt.Sprintf(m.downloadTemplate, m.version)
 	} else {
@@ -53,7 +58,7 @@ func (m *Module) Download() error {
 	downloadUrl := m.Url()
 	slog.Info(fmt.Sprintf("Download %s", downloadUrl))
 	cmd := exec.Command("wget", "--no-check-certificate", downloadUrl, "-O", fname)
-	out, err := cmd.Output()
+	out, err := cmd.CombinedOutput()
 	slog.Info(string(out))
 	return err
 }
@@ -64,7 +69,14 @@ func (m *Module) Untar() error {
 	}
 
 	fname := m.Filename(m.version)
-	cmd := exec.Command("tar", "xzvf", fname)
+
+	var cmd *exec.Cmd
+	if strings.Contains(fname, ".zip") {
+		cmd = exec.Command("unzip", fname)
+	} else {
+		cmd = exec.Command("tar", "xzvf", fname)
+	}
+
 	cmd.Dir = dependentDir
 	if err := cmd.Run(); err != nil {
 		return err
@@ -92,6 +104,16 @@ func (m *Module) scanPatches() error {
 }
 
 func (m *Module) Filename(version string) string {
+	if m.name == "etcd" {
+		os := goutils.Uname()
+		if os == goutils.Darwin {
+			return fmt.Sprintf("etcd-v%s-%s-%s.zip", m.version, os.String(), goutils.Arch())
+		} else {
+			return fmt.Sprintf("etcd-v%s-%s-%s.tar.gz", m.version, os.String(), goutils.Arch())
+		}
+
+	}
+
 	filename := m.name
 	if m.tarFilename != "" {
 		filename = m.tarFilename
@@ -100,6 +122,10 @@ func (m *Module) Filename(version string) string {
 }
 
 func (m *Module) Dir(version string) string {
+	if m.name == "etcd" {
+		return fmt.Sprintf("%s%cetcd-v%s-%s-%s", dependentDir, os.PathSeparator, m.version, goutils.Uname().String(), goutils.Arch())
+	}
+
 	filename := m.name
 	if m.tarFilename != "" {
 		filename = m.tarFilename

@@ -5,9 +5,21 @@ import (
 	"log/slog"
 	"os"
 	"os/exec"
+	"strings"
 )
 
 type OS uint8
+
+func (os OS) String() string {
+	switch os {
+	case Darwin:
+		return "darwin"
+	case Linux:
+		return "linux"
+	default:
+		return "unknow"
+	}
+}
 
 const (
 	Unknow OS = 0
@@ -30,7 +42,7 @@ func Uname() OS {
 		os.Exit(-1)
 	}
 
-	osName := string(out)
+	osName := strings.TrimSpace(string(out))
 	switch osName {
 	case "Darwin":
 		return Darwin
@@ -44,9 +56,11 @@ func Uname() OS {
 func Arch() string {
 	cmd := exec.Command("uname", "-m")
 	out, err := cmd.Output()
+
+	outStr := strings.TrimSpace(string(out))
 	if err != nil {
-		slog.Error(fmt.Sprintf("cannot get arch: %s, output: %s", err, string(out)))
+		slog.Error(fmt.Sprintf("cannot get arch: %s, output: %s", err, outStr))
 		os.Exit(-1)
 	}
-	return string(out)
+	return outStr
 }

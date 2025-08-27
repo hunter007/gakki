@@ -9,6 +9,20 @@ import (
 	"strings"
 )
 
+func installApisixNginxModule(m *Module) error {
+	openrestyMod := GetModule("openresty")
+	cmd := exec.Command("sudo make install")
+	cmd.Dir = m.Dir(m.version)
+	cmd.Env = append(cmd.Environ(), "OPENRESTY_PREFIX="+openrestyMod.Prefix())
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		slog.Error(string(output))
+		return err
+	}
+	slog.Info(string(output))
+	return nil
+}
+
 func setupApisixNginxModule() {
 	module := &Module{
 		name:        "apisix_nginx_module",
@@ -46,6 +60,7 @@ func setupApisixNginxModule() {
 		},
 		downloadTemplate: "https://github.com/api7/apisix-nginx-module/archive/refs/tags/%s.tar.gz",
 		Patch:            patchForOpenresty,
+		Install:          installApisixNginxModule,
 	}
 	all[module.name] = module
 }

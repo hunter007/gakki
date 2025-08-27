@@ -37,6 +37,8 @@ func init() {
 
 	setupPcre2()
 	setupZlib()
+	setupEtcd()
+	setupLimitTraffic()
 	setupLuaRestyEvents()
 	setupNgxMultiUpstreamModule()
 	setupLuaVarNginxModule()
