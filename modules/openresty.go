@@ -184,6 +184,7 @@ func setupOpenresty() {
 		},
 		downloadTemplate: "https://openresty.org/download/openresty-%s.tar.gz",
 		Install:          installOpenresty,
+		version:          "1.27.1.2",
 	}
 
 	all[module.name] = module

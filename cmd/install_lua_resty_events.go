@@ -24,6 +24,7 @@ var luaRestyEventsCmd = &cobra.Command{
 
 		if err := module.SetVersion(luaRestyEventsVersion); err != nil {
 			slog.Warn(fmt.Sprintf("unkown lua-resty-events version: %s", luaRestyEventsVersion))
+			module.PrintValidVersions()
 			os.Exit(-1)
 		}
 
