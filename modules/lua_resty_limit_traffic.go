@@ -36,12 +36,8 @@ func installLimitTraffic(m *Module) error {
 		}
 	}
 
-	path2 := fmt.Sprintf("%s%c%s%c%s", openrestyDir, os.PathSeparator, "bundle", os.PathSeparator, "lua-resty-limit-traffic-1.0.0")
-	if goutils.ExistDir(path2) {
-		return nil
-	}
-
-	cmd := exec.Command("mv", m.Dir(m.version), fmt.Sprintf("%s%c%s", openrestyDir, os.PathSeparator, "bundle"))
+	// 虽然已经使用1.0.0，但复制的时候只能用0.09
+	cmd := exec.Command("mv", m.Dir(m.version), fmt.Sprintf("%s%c%s%c%s", openrestyDir, os.PathSeparator, "bundle", os.PathSeparator, "lua-resty-limit-traffic-0.09"))
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
