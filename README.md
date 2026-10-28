@@ -1,2 +1,2 @@
 # gakki
-forked from apache apish v3.19.0
+forked from apache apisix v3.19.0
